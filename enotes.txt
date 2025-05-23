@@ -1,0 +1,10 @@
+Environments => dev, test , UAT, prod these four environment are present.
+1) dev -> for developers 
+2) test -> testers will use QA 
+3) UAT(user acceptance testing) -> client test 
+4) prod -> live 
+
+
+ 
+
+

@@ -23,5 +23,24 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(ResourceNotFoundException.class)
 	public ResponseEntity<?> handleResourceNotFoundException(Exception e) {
 		return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
-	}	
+	}
+	
+	@ExceptionHandler(ValidationException.class)
+	public ResponseEntity<?> handleValidationException(ValidationException e) {
+		return new ResponseEntity<>(e.getErrors(), HttpStatus.BAD_REQUEST);
+	}
+	
+//	@ExceptionHandler(MethodArgumentNotValidException.class)
+//	public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {
+//
+//		List<ObjectError> allErrors = e.getBindingResult().getAllErrors();
+//		Map<String, Object> error = new HashMap<>();
+//		allErrors.stream().forEach(er -> {
+//			String msg = er.getDefaultMessage();
+//		 	String field = ((FieldError)(er)).getField();
+//		 	error.put(field,msg);
+//		});
+//		
+//		return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+//	}
 }

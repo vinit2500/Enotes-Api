@@ -1,6 +1,5 @@
 package com.enotes.service.impl;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -40,8 +39,8 @@ public class CategoryServiceImpl implements CategoryService {
 		if (ObjectUtils.isEmpty(category.getId())) {
 			// creating first time
 			category.setIsDeleted(false);
-			category.setCreatedby(1);
-			category.setCreatedOn(new Date());
+//			category.setCreatedby(1);
+//			category.setCreatedOn(new Date());
 		} else {
 			updatecategory(category);
 		}
@@ -103,8 +102,8 @@ public class CategoryServiceImpl implements CategoryService {
 			category.setCreatedby(existingCategory.getCreatedby());
 			category.setCreatedOn(existingCategory.getCreatedOn());
 			category.setIsDeleted(existingCategory.getIsDeleted());
-			category.setUpdatedBy(1);
-			category.setUpdatedOn(new Date());
+//			category.setUpdatedBy(1);
+//			category.setUpdatedOn(new Date());
 		}
 	}
 

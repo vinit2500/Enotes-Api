@@ -15,12 +15,16 @@ import com.enotes.entity.Category;
 import com.enotes.exception.ResourceNotFoundException;
 import com.enotes.repository.CategoryRepository;
 import com.enotes.service.CategoryService;
+import com.enotes.util.Validation;
 
 @Service
 public class CategoryServiceImpl implements CategoryService {
 
 	@Autowired
 	private ModelMapper modelMapper;
+	
+	@Autowired
+	private Validation validation;
 
 	@Autowired
 	private CategoryRepository categoryRepository;
@@ -28,6 +32,8 @@ public class CategoryServiceImpl implements CategoryService {
 	@Override
 	public Boolean savecategory(CategoryDto categoryDto) {
 
+		//validation checking 
+		validation.categoryValidation(categoryDto);
 		// attributes ke name exactly same hone chaiye DTO aur Entity mai
 		Category category = modelMapper.map(categoryDto, Category.class);
 

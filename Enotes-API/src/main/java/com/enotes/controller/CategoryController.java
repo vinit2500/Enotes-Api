@@ -14,12 +14,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.service.annotation.DeleteExchange;
 
 import com.enotes.dto.CategoryDto;
 import com.enotes.dto.CategoryResponse;
 import com.enotes.service.CategoryService;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/category")
 public class CategoryController {
@@ -29,7 +31,6 @@ public class CategoryController {
 
 	@PostMapping("/save-category")
 	public ResponseEntity<?> saveCategory(@RequestBody CategoryDto categoryDto) {
-
 		Boolean savecategoryDto = categoryService.savecategory(categoryDto);
 		if (savecategoryDto) {
 			return new ResponseEntity<>("Saved", HttpStatus.CREATED);
@@ -37,9 +38,11 @@ public class CategoryController {
 		return new ResponseEntity<>("Not Saved", HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
-	@GetMapping("/category")
+	@GetMapping("/")
 	public ResponseEntity<?> getAllCategory() {
 
+//		String n = null;
+//		n.toLowerCase();
 		List<CategoryDto> allCategory = categoryService.getAllCategory();
 
 		if (CollectionUtils.isEmpty(allCategory)) {
@@ -60,28 +63,26 @@ public class CategoryController {
 			return new ResponseEntity<>(allCategory, HttpStatus.OK);
 		}
 	}
-	
-	@GetMapping("/{id}")
-	public ResponseEntity<?> getCategoryDetailsById(@PathVariable Integer id) {
-	 CategoryDto categoryDto = categoryService.getCategoryById(id);
-	 
-	 if(ObjectUtils.isEmpty(categoryDto)) {
-		 return new ResponseEntity<>("Category not found with id = " + id, HttpStatus.NOT_FOUND);
-	 }
-	 return new ResponseEntity<>(categoryDto, HttpStatus.OK);
 
+	@GetMapping("/{id}")
+	public ResponseEntity<?> getCategoryDetailsById(@PathVariable Integer id) throws Exception {
+		CategoryDto categoryDto;
+		categoryDto = categoryService.getCategoryById(id);
+		if (ObjectUtils.isEmpty(categoryDto)) {
+			return new ResponseEntity<>("Internal Server Error", HttpStatus.NOT_FOUND);
+		}
+		return new ResponseEntity<>(categoryDto, HttpStatus.OK);
 	}
-	
+
 	@DeleteMapping("/{id}")
 	public ResponseEntity<?> deleteCategoryById(@PathVariable Integer id) {
-	 Boolean deleted = categoryService.deleteCategory(id);
-	 
-	 if(deleted) {
-		 return new ResponseEntity<>("Category delete successfully", HttpStatus.OK);
-	 }
-	 return new ResponseEntity<>("Category not deleted", HttpStatus.INTERNAL_SERVER_ERROR);
+		Boolean deleted = categoryService.deleteCategory(id);
+
+		if (deleted) {
+			return new ResponseEntity<>("Category delete successfully", HttpStatus.OK);
+		}
+		return new ResponseEntity<>("Category not deleted", HttpStatus.INTERNAL_SERVER_ERROR);
 
 	}
-
 
 }

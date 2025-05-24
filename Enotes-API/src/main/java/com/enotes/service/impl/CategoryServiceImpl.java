@@ -20,44 +20,53 @@ public class CategoryServiceImpl implements CategoryService {
 
 	@Autowired
 	private ModelMapper modelMapper;
-	
+
 	@Autowired
 	private CategoryRepository categoryRepository;
 
-	@Override    
+	@Override
 	public Boolean savecategory(CategoryDto categoryDto) {
-		
-		categoryDto.setIsDeleted(false);
-		categoryDto.setCreatedBy(1);
-		categoryDto.setCreatedOn(new Date());
-		// attributes ke name exactly same hone chaiye DTO aur Entity mai 
+
+		// attributes ke name exactly same hone chaiye DTO aur Entity mai
 		Category category = modelMapper.map(categoryDto, Category.class);
-		 Category savedCategory = categoryRepository.save(category);
-	   	 return ObjectUtils.isEmpty(savedCategory) ? false : true;
+
+		if (ObjectUtils.isEmpty(category.getId())) {
+			// creating first time
+			category.setIsDeleted(false);
+			category.setCreatedby(1);
+			category.setCreatedOn(new Date());
+		} else {
+			updatecategory(category);
+		}
+
+		Category savedCategory = categoryRepository.save(category);
+		return ObjectUtils.isEmpty(savedCategory) ? false : true;
 	}
 
 	@Override
 	public List<CategoryDto> getAllCategory() {
 		List<Category> categories = categoryRepository.findByIsDeletedFalse();
-		//java 8 stream api concept 
-		List<CategoryDto> categoryDtoList = categories.stream().map(cat-> modelMapper.map(cat, CategoryDto.class)).toList();
+		// java 8 stream api concept
+		List<CategoryDto> categoryDtoList = categories.stream().map(cat -> modelMapper.map(cat, CategoryDto.class))
+				.toList();
 		return categoryDtoList;
 	}
 
 	@Override
 	public List<CategoryResponse> getActiveCategory() {
 		List<Category> categories = categoryRepository.findByIsActiveTrueAndIsDeletedFalse();
-		//only matching field map kr dega(id,name,description) baki nhi krega 
-		List<CategoryResponse> categoryList = categories.stream().map(cat -> modelMapper.map(cat, CategoryResponse.class)).toList();
+		// only matching field map kr dega(id,name,description) baki nhi krega
+		List<CategoryResponse> categoryList = categories.stream()
+				.map(cat -> modelMapper.map(cat, CategoryResponse.class)).toList();
 		return categoryList;
 	}
 
 	@Override
 	public CategoryDto getCategoryById(Integer id) {
 		Optional<Category> findByCategory = categoryRepository.findByIdAndIsDeletedFalse(id);
-		if(findByCategory.isPresent()) {
-			 Category category = findByCategory.get();
-			 return modelMapper.map(category, CategoryDto.class);
+		if (findByCategory.isPresent()) {
+			Category category = findByCategory.get();
+			return modelMapper.map(category, CategoryDto.class);
 		}
 		return null;
 	}
@@ -65,8 +74,8 @@ public class CategoryServiceImpl implements CategoryService {
 	@Override
 	public Boolean deleteCategory(Integer id) {
 		Optional<Category> findByCategory = categoryRepository.findById(id);
-		
-		if(findByCategory.isPresent()) {
+
+		if (findByCategory.isPresent()) {
 			Category category = findByCategory.get();
 			category.setIsDeleted(true);
 			categoryRepository.save(category);
@@ -74,4 +83,18 @@ public class CategoryServiceImpl implements CategoryService {
 		}
 		return false;
 	}
+
+	private void updatecategory(Category category) {
+		Optional<Category> findById = categoryRepository.findById(category.getId());
+
+		if (findById.isPresent()) {
+			Category existingCategory = findById.get();
+			category.setCreatedby(existingCategory.getCreatedby());
+			category.setCreatedOn(existingCategory.getCreatedOn());
+			category.setIsDeleted(existingCategory.getIsDeleted());
+			category.setUpdatedBy(1);
+			category.setUpdatedOn(new Date());
+		}
+	}
+
 }

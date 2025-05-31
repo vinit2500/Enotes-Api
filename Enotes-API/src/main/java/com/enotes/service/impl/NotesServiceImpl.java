@@ -85,7 +85,7 @@ public class NotesServiceImpl implements NotesService {
 		if (!ObjectUtils.isEmpty(fileDtls)) {
 			notesMap.setFileDetails(fileDtls);
 		} else {
-			//			notesMap.setFileDetails(null);
+			// notesMap.setFileDetails(null);
 			if (ObjectUtils.isEmpty(notesDto.getId())) {
 				notesMap.setFileDetails(null);
 			}
@@ -120,7 +120,7 @@ public class NotesServiceImpl implements NotesService {
 	private void checkCategoryExist(CategoryDto category) throws ResourceNotFoundException {
 
 		categoryRepository.findById(category.getId())
-		.orElseThrow(() -> new ResourceNotFoundException("Category not found with given id"));
+				.orElseThrow(() -> new ResourceNotFoundException("Category not found with given id"));
 
 	}
 
@@ -267,28 +267,50 @@ public class NotesServiceImpl implements NotesService {
 	@Override
 	public void favouriteNotes(Integer noteId) throws Exception {
 		Integer userId = 1;
-		Notes notes = notesRepository.findById(noteId).orElseThrow(()-> new ResourceNotFoundException("Notes not found with given id"));
-		
+		Notes notes = notesRepository.findById(noteId)
+				.orElseThrow(() -> new ResourceNotFoundException("Notes not found with given id"));
+
 		FavouriteNote favouriteNote = new FavouriteNote();
 		favouriteNote.setNote(notes);
 		favouriteNote.setUserId(userId);
-		
+
 		favouriteNoteRepository.save(favouriteNote);
 	}
 
 	@Override
 	public void unFavoriteNotes(Integer favouriteNotesId) throws Exception {
-		FavouriteNote favouriteNotes = favouriteNoteRepository.findById(favouriteNotesId).orElseThrow(()-> new ResourceNotFoundException("Favourite Notes not found with given id"));
-	    favouriteNoteRepository.delete(favouriteNotes);
+		FavouriteNote favouriteNotes = favouriteNoteRepository.findById(favouriteNotesId)
+				.orElseThrow(() -> new ResourceNotFoundException("Favourite Notes not found with given id"));
+		favouriteNoteRepository.delete(favouriteNotes);
 	}
 
 	@Override
 	public List<FavouriteNoteDto> getUserFavouriteNotes() {
 		Integer userId = 1;
 		List<FavouriteNote> favouriteNotes = favouriteNoteRepository.findByUserId(userId);
-		
-		List<FavouriteNoteDto> listOfFavNotes = favouriteNotes.stream().map(fn -> modelMapper.map(fn, FavouriteNoteDto.class)).toList();
+
+		List<FavouriteNoteDto> listOfFavNotes = favouriteNotes.stream()
+				.map(fn -> modelMapper.map(fn, FavouriteNoteDto.class)).toList();
 		return listOfFavNotes;
+	}
+
+	@Override
+	public Boolean copyNotes(Integer noteId) throws Exception {
+		Notes notes = notesRepository.findById(noteId)
+				.orElseThrow(() -> new ResourceNotFoundException("Notes not found withh given id"));
+		
+		Notes copyNote = new Notes();
+		copyNote.setTitle(notes.getTitle());
+		copyNote.setDescription(notes.getDescription());
+		copyNote.setCategory(notes.getCategory());
+		copyNote.setIsDeleted(false);
+		copyNote.setFileDetails(null);
+		Notes savedCopyNotes = notesRepository.save(copyNote);
+		
+		if(!ObjectUtils.isEmpty(savedCopyNotes)) {
+			return true;
+		}
+		return false;
 	}
 
 }

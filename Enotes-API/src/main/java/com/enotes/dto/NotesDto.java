@@ -1,5 +1,6 @@
 package com.enotes.dto;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
 import lombok.AllArgsConstructor;
@@ -23,6 +24,18 @@ public class NotesDto {
 	private Date updatedOn;
 
 	private FileDto fileDetails;
+
+	private Boolean isDeleted;
+
+	private LocalDateTime deletedOn;
+
+	public FileDto getFileDetails() {
+		return fileDetails;
+	}
+
+	public void setFileDetails(FileDto fileDetails) {
+		this.fileDetails = fileDetails;
+	}
 
 	@Getter
 	@Setter
@@ -149,11 +162,20 @@ public class NotesDto {
 		this.updatedOn = updatedOn;
 	}
 
-	public FileDto getFileDetails() {
-		return fileDetails;
+	public Boolean getIsDeleted() {
+		return isDeleted;
 	}
 
-	public void setFileDetails(FileDto fileDetails) {
-		this.fileDetails = fileDetails;
+	public void setIsDeleted(Boolean isDeleted) {
+		this.isDeleted = isDeleted;
 	}
+
+	public LocalDateTime getDeletedOn() {
+		return deletedOn;
+	}
+
+	public void setDeletedOn(LocalDateTime deletedOn) {
+		this.deletedOn = deletedOn;
+	}
+
 }

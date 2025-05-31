@@ -1,6 +1,5 @@
 package com.enotes.controller;
 
-import java.io.IOException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.enotes.dto.NotesDto;
 import com.enotes.dto.NotesResponse;
 import com.enotes.entity.FileDetails;
-import com.enotes.exception.ResourceNotFoundException;
 import com.enotes.service.NotesService;
 import com.enotes.util.CommonUtils;
 
@@ -32,7 +31,7 @@ public class NotesController {
 	private NotesService notesService;
 	
 	@PostMapping("/")
-	public ResponseEntity<?> saveNotes(@RequestParam String notes, @RequestParam(required = false) MultipartFile file) throws ResourceNotFoundException, IOException {
+	public ResponseEntity<?> saveNotes(@RequestParam String notes, @RequestParam(required = false) MultipartFile file) throws Exception {
 		Boolean saveNotes = notesService.saveNotes(notes, file);
 		
 		if(saveNotes) {
@@ -76,5 +75,40 @@ public class NotesController {
 //			return ResponseEntity.noContent().build();
 //		}
 		return CommonUtils.createBuildResponse(notes, HttpStatus.OK);
+	}
+	
+	@GetMapping("/delete/{id}")
+	public ResponseEntity<?> deleteNotes(@PathVariable Integer id) throws Exception {
+		notesService.softDeleteNotes(id);
+		return CommonUtils.createBuildResponseMessage("Delete success", HttpStatus.OK);
+	}
+	
+	@GetMapping("/restore/{id}")
+	public ResponseEntity<?> restoreNotes(@PathVariable Integer id) throws Exception {
+		notesService.restoreNotes(id);
+		return CommonUtils.createBuildResponseMessage("Notes restore success", HttpStatus.OK);
+	}
+	
+	@GetMapping("/recycle-bin")
+	public ResponseEntity<?> getUserRecycleBinNotes() throws Exception {
+		Integer userId = 1;
+		List<NotesDto> notes = notesService.getUserRecycleBinNotes(userId);
+		if(CollectionUtils.isEmpty(notes)) {
+			return CommonUtils.createBuildResponse("Notes not available in recycle bin", HttpStatus.OK);
+		}
+		return CommonUtils.createBuildResponse(notes, HttpStatus.OK);
+	}
+
+	@DeleteMapping("/delete/{id}")
+	public ResponseEntity<?> hardDeleteNotes(@PathVariable Integer id) throws Exception {
+		notesService.hardDeleteNotes(id);
+		return CommonUtils.createBuildResponseMessage("Delete success", HttpStatus.OK);
+	}
+	
+	@DeleteMapping("/delete")
+	public ResponseEntity<?> emptyRecycleBin() throws Exception {
+		Integer userId = 1;
+		notesService.emptyRecycleBin(userId);
+		return CommonUtils.createBuildResponseMessage("Delete success", HttpStatus.OK);
 	}
 }

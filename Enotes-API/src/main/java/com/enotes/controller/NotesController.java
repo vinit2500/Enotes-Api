@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.enotes.dto.NotesDto;
+import com.enotes.dto.NotesResponse;
 import com.enotes.entity.FileDetails;
 import com.enotes.exception.ResourceNotFoundException;
 import com.enotes.service.NotesService;
@@ -59,6 +60,21 @@ public class NotesController {
 		if(CollectionUtils.isEmpty(notes)) {
 			return ResponseEntity.noContent().build();
 		}
+		return CommonUtils.createBuildResponse(notes, HttpStatus.OK);
+	}
+	
+	
+	@GetMapping("/user-notes")
+	public ResponseEntity<?> getAllNotesByUser(
+			@RequestParam(name = "pageNo" , defaultValue = "0")  Integer pageNo,
+			@RequestParam(name = "pageSize" , defaultValue = "10") Integer pageSize
+			) {
+		Integer userId = 1;
+		NotesResponse notes = notesService.getAllNotesByUser(userId, pageNo, pageSize);
+
+//		if(CollectionUtils.isEmpty(notes)) {
+//			return ResponseEntity.noContent().build();
+//		}
 		return CommonUtils.createBuildResponse(notes, HttpStatus.OK);
 	}
 }

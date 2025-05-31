@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 public interface NotesService {
 
-	public Boolean saveNotes(String notes, MultipartFile file) throws ResourceNotFoundException, JsonMappingException, JsonProcessingException, IOException;
+	public Boolean saveNotes(String notes, MultipartFile file) throws ResourceNotFoundException, JsonMappingException, JsonProcessingException, IOException, Exception;
 	
 	public List<NotesDto> getAllNotes();
 
@@ -23,5 +23,15 @@ public interface NotesService {
 	public FileDetails getFileDetails(Integer id) throws Exception;
 
 	public NotesResponse getAllNotesByUser(Integer userId, Integer pageNo, Integer pageSize);
+
+	public void softDeleteNotes(Integer id) throws Exception;
+
+	public void restoreNotes(Integer id) throws Exception;
+
+	public List<NotesDto> getUserRecycleBinNotes(Integer userId);
+
+	public void hardDeleteNotes(Integer id) throws Exception;
+
+	public void emptyRecycleBin(Integer userId);
 	
 }

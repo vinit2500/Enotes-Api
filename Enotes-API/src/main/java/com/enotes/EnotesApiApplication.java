@@ -3,9 +3,11 @@ package com.enotes;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableJpaAuditing(auditorAwareRef = "auditAware") //3rd step then step 6 give name of bean 
+@EnableScheduling
 public class EnotesApiApplication {
 
 	public static void main(String[] args) {

@@ -24,14 +24,17 @@ import org.springframework.util.ObjectUtils;
 import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.enotes.dto.FavouriteNoteDto;
 import com.enotes.dto.NotesDto;
 import com.enotes.dto.NotesDto.CategoryDto;
 import com.enotes.dto.NotesDto.FileDto;
 import com.enotes.dto.NotesResponse;
+import com.enotes.entity.FavouriteNote;
 import com.enotes.entity.FileDetails;
 import com.enotes.entity.Notes;
 import com.enotes.exception.ResourceNotFoundException;
 import com.enotes.repository.CategoryRepository;
+import com.enotes.repository.FavouriteNoteRepository;
 import com.enotes.repository.FileRepository;
 import com.enotes.repository.NotesRepository;
 import com.enotes.service.NotesService;
@@ -48,6 +51,9 @@ public class NotesServiceImpl implements NotesService {
 
 	@Autowired
 	private FileRepository fileRepository;
+
+	@Autowired
+	private FavouriteNoteRepository favouriteNoteRepository;
 
 	@Value("${file.upload.path}")
 	private String uploadPath;
@@ -79,7 +85,7 @@ public class NotesServiceImpl implements NotesService {
 		if (!ObjectUtils.isEmpty(fileDtls)) {
 			notesMap.setFileDetails(fileDtls);
 		} else {
-//			notesMap.setFileDetails(null);
+			//			notesMap.setFileDetails(null);
 			if (ObjectUtils.isEmpty(notesDto.getId())) {
 				notesMap.setFileDetails(null);
 			}
@@ -114,7 +120,7 @@ public class NotesServiceImpl implements NotesService {
 	private void checkCategoryExist(CategoryDto category) throws ResourceNotFoundException {
 
 		categoryRepository.findById(category.getId())
-				.orElseThrow(() -> new ResourceNotFoundException("Category not found with given id"));
+		.orElseThrow(() -> new ResourceNotFoundException("Category not found with given id"));
 
 	}
 
@@ -240,24 +246,49 @@ public class NotesServiceImpl implements NotesService {
 	public void hardDeleteNotes(Integer id) throws Exception {
 		Notes notes = notesRepository.findById(id)
 				.orElseThrow(() -> new ResourceNotFoundException("Notes not found withh given id"));
-		
-		if(notes.getIsDeleted()) {
+
+		if (notes.getIsDeleted()) {
 			notesRepository.delete(notes);
-		}
-		else 
-		{
-		  throw new IllegalArgumentException("You can not hard delete directly");	
+		} else {
+			throw new IllegalArgumentException("You can not hard delete directly");
 		}
 	}
 
 	@Override
 	public void emptyRecycleBin(Integer userId) {
-	
+
 		List<Notes> recycleNotes = notesRepository.findByCreatedByAndIsDeletedTrue(userId);
-		
-		if(!CollectionUtils.isEmpty(recycleNotes)) {
+
+		if (!CollectionUtils.isEmpty(recycleNotes)) {
 			notesRepository.deleteAll(recycleNotes);
 		}
+	}
+
+	@Override
+	public void favouriteNotes(Integer noteId) throws Exception {
+		Integer userId = 1;
+		Notes notes = notesRepository.findById(noteId).orElseThrow(()-> new ResourceNotFoundException("Notes not found with given id"));
+		
+		FavouriteNote favouriteNote = new FavouriteNote();
+		favouriteNote.setNote(notes);
+		favouriteNote.setUserId(userId);
+		
+		favouriteNoteRepository.save(favouriteNote);
+	}
+
+	@Override
+	public void unFavoriteNotes(Integer favouriteNotesId) throws Exception {
+		FavouriteNote favouriteNotes = favouriteNoteRepository.findById(favouriteNotesId).orElseThrow(()-> new ResourceNotFoundException("Favourite Notes not found with given id"));
+	    favouriteNoteRepository.delete(favouriteNotes);
+	}
+
+	@Override
+	public List<FavouriteNoteDto> getUserFavouriteNotes() {
+		Integer userId = 1;
+		List<FavouriteNote> favouriteNotes = favouriteNoteRepository.findByUserId(userId);
+		
+		List<FavouriteNoteDto> listOfFavNotes = favouriteNotes.stream().map(fn -> modelMapper.map(fn, FavouriteNoteDto.class)).toList();
+		return listOfFavNotes;
 	}
 
 }

@@ -30,6 +30,9 @@ public class Notes extends BaseModel {
 	
 	@ManyToOne
 	private Category category;
+	
+	@ManyToOne
+	private FileDetails fileDetails;
 
 	public Integer getId() {
 		return id;
@@ -61,5 +64,13 @@ public class Notes extends BaseModel {
 
 	public void setCategory(Category category) {
 		this.category = category;
+	}
+
+	public FileDetails getFileDetails() {
+		return fileDetails;
+	}
+
+	public void setFileDetails(FileDetails fileDetails) {
+		this.fileDetails = fileDetails;
 	}
 }

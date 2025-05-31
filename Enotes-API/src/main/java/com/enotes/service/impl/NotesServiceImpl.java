@@ -1,7 +1,10 @@
 package com.enotes.service.impl;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StreamUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.enotes.dto.NotesDto;
@@ -61,11 +65,11 @@ public class NotesServiceImpl implements NotesService {
 		FileDetails fileDtls = saveFileDetails(file);
 
 		if (!ObjectUtils.isEmpty(fileDtls)) {
-            notesMap.setFileDetails(fileDtls);
+			notesMap.setFileDetails(fileDtls);
 		} else {
 			notesMap.setFileDetails(null);
 		}
-		
+
 		Notes saveNotes = notesRepository.save(notesMap);
 
 		if (!ObjectUtils.isEmpty(saveNotes)) {
@@ -84,7 +88,7 @@ public class NotesServiceImpl implements NotesService {
 	private void checkCategoryExist(CategoryDto category) throws ResourceNotFoundException {
 
 		categoryRepository.findById(category.getId())
-				.orElseThrow(() -> new ResourceNotFoundException("Category not found with given id"));
+		.orElseThrow(() -> new ResourceNotFoundException("Category not found with given id"));
 
 	}
 
@@ -92,17 +96,16 @@ public class NotesServiceImpl implements NotesService {
 
 		if (!ObjectUtils.isEmpty(file) && !file.isEmpty()) {
 			String originalFilename = file.getOriginalFilename();
-			List<String> allowExtension = Arrays.asList("pdf","xlsx","jpg","png");
-			
-			if(!allowExtension.contains(FilenameUtils.getExtension(originalFilename))) {
+			List<String> allowExtension = Arrays.asList("pdf", "xlsx", "jpg", "png", "docx");
+
+			if (!allowExtension.contains(FilenameUtils.getExtension(originalFilename))) {
 				throw new IllegalArgumentException("Invalid format Upload only .pdf, .xlsx, .jpg");
 			}
-			
-			
+
 			String rndString = UUID.randomUUID().toString();
 			String extension = FilenameUtils.getExtension(originalFilename);
 			String uploadFileName = rndString + "." + extension;
-			
+
 			File saveFile = new File(uploadPath);
 
 			if (!saveFile.exists()) {
@@ -112,7 +115,6 @@ public class NotesServiceImpl implements NotesService {
 			// path : enotesapiservice/notes/java.pdf
 			String storePath = uploadPath.concat(uploadFileName);
 
-		
 			// upload file
 			long upload = Files.copy(file.getInputStream(), Paths.get(storePath));
 
@@ -145,4 +147,21 @@ public class NotesServiceImpl implements NotesService {
 		fileName = fileName + "." + extension;
 		return fileName;
 	}
+
+	@Override
+	public byte[] downloadFile(FileDetails fileDtls) throws Exception {
+
+		InputStream io = new FileInputStream(fileDtls.getPath());
+
+		byte[] byteData = StreamUtils.copyToByteArray(io);
+		return byteData;
+	}
+
+	@Override
+	public FileDetails getFileDetails(Integer id) throws Exception {
+		FileDetails fileDtls = fileRepository.findById(id)
+				.orElseThrow(() -> new ResourceNotFoundException("File not present with " + id + "id"));
+		return fileDtls;
+	}
+
 }

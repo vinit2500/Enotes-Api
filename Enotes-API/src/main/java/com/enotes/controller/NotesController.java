@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.enotes.dto.FavouriteNoteDto;
 import com.enotes.dto.NotesDto;
 import com.enotes.dto.NotesResponse;
 import com.enotes.entity.FileDetails;
@@ -111,4 +112,29 @@ public class NotesController {
 		notesService.emptyRecycleBin(userId);
 		return CommonUtils.createBuildResponseMessage("Delete success", HttpStatus.OK);
 	}
+	
+	@GetMapping("/fav/{noteId}")
+	public ResponseEntity<?> favouriteNotes(@PathVariable Integer noteId) throws Exception {
+		notesService.favouriteNotes(noteId);
+		return CommonUtils.createBuildResponseMessage("Notes added favourite", HttpStatus.OK);
+	}
+	
+	@DeleteMapping("/un-fav/{favNotId}")
+	public ResponseEntity<?> unFavouriteNotes(@PathVariable Integer favNotId) throws Exception {
+		notesService.unFavoriteNotes(favNotId);
+		return CommonUtils.createBuildResponseMessage("Remove favourite notes", HttpStatus.OK);
+	}
+	
+	@GetMapping("/fav-note")
+	public ResponseEntity<?> getUserAllFavourite() throws Exception {
+		List<FavouriteNoteDto> userFavouriteNotes = notesService.getUserFavouriteNotes();
+		
+		if(CollectionUtils.isEmpty(userFavouriteNotes)) {
+			return ResponseEntity.noContent().build();
+		}
+		
+		return CommonUtils.createBuildResponse(userFavouriteNotes, HttpStatus.OK);
+	}
+	
+	
 }

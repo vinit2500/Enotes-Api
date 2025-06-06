@@ -1,0 +1,38 @@
+package com.enotes.service;
+
+import java.io.UnsupportedEncodingException;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+import com.enotes.dto.EmailRequest;
+
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+
+@Service
+public class EmailService {
+
+	@Autowired
+	private JavaMailSender javaMailSender;
+
+	@Value("${send.from}")
+	private String mailFrom;
+
+	public void send(EmailRequest emailRequest) throws MessagingException, UnsupportedEncodingException {
+
+		MimeMessage message = javaMailSender.createMimeMessage();
+		MimeMessageHelper helper = new MimeMessageHelper(message);
+
+		helper.setFrom(mailFrom, emailRequest.getTitle());
+		helper.setTo(emailRequest.getTo());
+		helper.setSubject(emailRequest.getSubject());
+		helper.setText(emailRequest.getMessage(), true);
+
+		javaMailSender.send(message);
+	}
+
+}

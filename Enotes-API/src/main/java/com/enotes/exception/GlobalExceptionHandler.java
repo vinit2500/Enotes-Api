@@ -57,6 +57,12 @@ public class GlobalExceptionHandler {
 //		return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
 		 return CommonUtils.createErrorResponseMessage(e.getMessage(), HttpStatus.NOT_FOUND);
 	}
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<?> handleIllegalArgumentException(IllegalArgumentException e) {
+		return CommonUtils.createErrorResponseMessage(e.getMessage(), HttpStatus.BAD_REQUEST);
+	}
+
 	
 //	@ExceptionHandler(MethodArgumentNotValidException.class)
 //	public ResponseEntity<?> handleMethodArgumentNotValidException(MethodArgumentNotValidException e) {

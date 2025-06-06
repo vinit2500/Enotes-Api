@@ -1,0 +1,52 @@
+package com.enotes.controller;
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.CollectionUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.enotes.dto.TodoDto;
+import com.enotes.service.TodoService;
+import com.enotes.util.CommonUtils;
+
+@RestController
+@RequestMapping("/api/v1/todo")
+public class TodoController {
+
+	@Autowired
+	private TodoService todoService;
+	
+	@PostMapping("/")
+	public ResponseEntity<?> saveTodo(@RequestBody TodoDto todoDto) throws Exception {
+		Boolean saveTodo = todoService.saveTodo(todoDto);
+		if(saveTodo) {
+			return CommonUtils.createBuildResponseMessage("Todo saved successfully", HttpStatus.CREATED);
+		}
+		return CommonUtils.createErrorResponseMessage("Todo not saved", HttpStatus.INTERNAL_SERVER_ERROR);
+	}
+	
+	@GetMapping("/{id}")
+	public ResponseEntity<?> getTodo(@PathVariable Integer id) throws Exception {
+		TodoDto todo = todoService.getTodoById(id);
+		return CommonUtils.createBuildResponse(todo, HttpStatus.OK);
+	}	
+	
+	@GetMapping("/get-all/{id}")
+	public ResponseEntity<?> getAllTodosByUser() throws Exception {
+		List<TodoDto> todoList = todoService.getTodoByUser();
+		
+		if(CollectionUtils.isEmpty(todoList)) {
+			return ResponseEntity.noContent().build();
+		}
+		return CommonUtils.createBuildResponse(todoList, HttpStatus.OK);
+	}	
+	
+}

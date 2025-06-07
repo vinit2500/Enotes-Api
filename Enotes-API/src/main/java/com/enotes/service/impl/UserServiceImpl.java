@@ -6,10 +6,17 @@ import java.util.UUID;
 
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
+import com.enotes.config.security.CustomUserDetails;
 import com.enotes.dto.EmailRequest;
+import com.enotes.dto.LoginRequest;
+import com.enotes.dto.LoginResponse;
 import com.enotes.dto.UserDto;
 import com.enotes.entity.AccountStatus;
 import com.enotes.entity.Role;
@@ -17,6 +24,7 @@ import com.enotes.entity.User;
 import com.enotes.repository.RoleRepository;
 import com.enotes.repository.UserRepository;
 import com.enotes.service.EmailService;
+import com.enotes.service.JwtService;
 import com.enotes.service.UserService;
 import com.enotes.util.Validation;
 
@@ -40,6 +48,15 @@ public class UserServiceImpl implements UserService {
 	@Autowired
 	private EmailService emailService;
 
+	@Autowired
+	private AuthenticationManager authenticationManager;
+
+	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@Autowired
+	private JwtService jwtService;
+
 	@Override
 	public Boolean register(UserDto userDto, String url) throws UnsupportedEncodingException, MessagingException {
 		validation.userValidation(userDto);
@@ -51,6 +68,7 @@ public class UserServiceImpl implements UserService {
 		accountStatus.setVerificationCode(UUID.randomUUID().toString());
 
 		user.setStatus(accountStatus);
+		user.setPassword(passwordEncoder.encode(user.getPassword()));
 		User saveduser = userRepository.save(user);
 
 		if (!ObjectUtils.isEmpty(saveduser)) {
@@ -58,6 +76,23 @@ public class UserServiceImpl implements UserService {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public LoginResponse login(LoginRequest loginRequest) {
+		Authentication authenticate = authenticationManager.authenticate(
+				new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+
+		if (authenticate.isAuthenticated()) {
+
+			CustomUserDetails customUserDetails = (CustomUserDetails) authenticate.getPrincipal();
+			String token = jwtService.generateToken(customUserDetails.getUser());
+			LoginResponse loginResponse = new LoginResponse();
+			loginResponse.setToken(token);
+			loginResponse.setUser(modelMapper.map(customUserDetails.getUser(), UserDto.class));
+			return loginResponse;
+		}
+		return null;
 	}
 
 	private void emailSend(User saveduser, String url) throws UnsupportedEncodingException, MessagingException {

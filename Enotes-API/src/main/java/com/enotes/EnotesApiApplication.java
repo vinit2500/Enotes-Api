@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-@EnableJpaAuditing(auditorAwareRef = "auditAware") //3rd step then step 6 give name of bean 
+@EnableJpaAuditing(auditorAwareRef = "auditAware") // 3rd step then step 6 give name of bean
 @EnableScheduling
 public class EnotesApiApplication {
 

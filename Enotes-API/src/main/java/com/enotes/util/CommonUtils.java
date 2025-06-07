@@ -2,7 +2,6 @@ package com.enotes.util;
 
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
 import com.enotes.handler.GenericResponse;

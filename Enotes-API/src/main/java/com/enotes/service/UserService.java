@@ -8,5 +8,5 @@ import jakarta.mail.MessagingException;
 
 public interface UserService {
 
-	public Boolean register(UserDto userDto) throws UnsupportedEncodingException, MessagingException;
+	public Boolean register(UserDto userDto, String url) throws UnsupportedEncodingException, MessagingException;
 }

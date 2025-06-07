@@ -15,6 +15,7 @@ import com.enotes.service.UserService;
 import com.enotes.util.CommonUtils;
 
 import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -24,8 +25,10 @@ public class AuthController {
 	private UserService userService;
 
 	@PostMapping("/")
-	public ResponseEntity<?> registerUser(@RequestBody UserDto userDto) throws UnsupportedEncodingException, MessagingException {
-		Boolean register = userService.register(userDto);
+	public ResponseEntity<?> registerUser(@RequestBody UserDto userDto, HttpServletRequest request)
+			throws UnsupportedEncodingException, MessagingException {
+		String url = CommonUtils.getUrl(request);
+		Boolean register = userService.register(userDto, url);
 		if (register) {
 			return CommonUtils.createBuildResponseMessage("Register successfull", HttpStatus.CREATED);
 		}

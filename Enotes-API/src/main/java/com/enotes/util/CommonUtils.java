@@ -3,7 +3,10 @@ package com.enotes.util;
 import org.apache.commons.io.FilenameUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 
+import com.enotes.config.security.CustomUserDetails;
+import com.enotes.entity.User;
 import com.enotes.handler.GenericResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +26,7 @@ public class CommonUtils {
 		return response;
 	}
 
-	public static ResponseEntity<?> createBuildResponseMessage( String message, HttpStatus status) {
+	public static ResponseEntity<?> createBuildResponseMessage(String message, HttpStatus status) {
 
 		GenericResponse res = new GenericResponse();
 
@@ -34,8 +37,7 @@ public class CommonUtils {
 		ResponseEntity<?> response = res.create();
 		return response;
 	}
-	
-	
+
 	public static ResponseEntity<?> createErrorResponse(Object data, HttpStatus status) {
 
 		GenericResponse res = new GenericResponse();
@@ -47,7 +49,6 @@ public class CommonUtils {
 		ResponseEntity<?> response = res.create();
 		return response;
 	}
-	
 
 	public static ResponseEntity<?> createErrorResponseMessage(String message, HttpStatus status) {
 
@@ -80,11 +81,20 @@ public class CommonUtils {
 	}
 
 	public static String getUrl(HttpServletRequest request) {
-		String apiUrl = request.getRequestURL().toString(); //http://localhost:8080/api/v1/auth
-		apiUrl = apiUrl.replace(request.getServletPath(), ""); //http://localhost:8080
+		String apiUrl = request.getRequestURL().toString(); // http://localhost:8080/api/v1/auth
+		apiUrl = apiUrl.replace(request.getServletPath(), ""); // http://localhost:8080
 		return apiUrl;
 	}
-	
-	
+
+	public static User getLoggedInUser() {
+
+		try {
+			CustomUserDetails loggedInUser = (CustomUserDetails) SecurityContextHolder.getContext().getAuthentication()
+					.getPrincipal();
+			return loggedInUser.getUser();
+		} catch (Exception e) {
+			throw e;
+		}
+	}
 
 }

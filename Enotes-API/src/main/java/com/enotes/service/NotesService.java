@@ -15,32 +15,35 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 
 public interface NotesService {
 
-	public Boolean saveNotes(String notes, MultipartFile file) throws ResourceNotFoundException, JsonMappingException, JsonProcessingException, IOException, Exception;
-	
+	public Boolean saveNotes(String notes, MultipartFile file)
+			throws ResourceNotFoundException, JsonMappingException, JsonProcessingException, IOException, Exception;
+
 	public List<NotesDto> getAllNotes();
 
 	public byte[] downloadFile(FileDetails fileDtls) throws Exception;
 
 	public FileDetails getFileDetails(Integer id) throws Exception;
 
-	public NotesResponse getAllNotesByUser(Integer userId, Integer pageNo, Integer pageSize);
+	public NotesResponse getAllNotesByUser(Integer pageNo, Integer pageSize);
+
+	public NotesResponse getNotesByUserSearch(Integer pageNo, Integer pageSize, String keyword);
 
 	public void softDeleteNotes(Integer id) throws Exception;
 
 	public void restoreNotes(Integer id) throws Exception;
 
-	public List<NotesDto> getUserRecycleBinNotes(Integer userId);
+	public List<NotesDto> getUserRecycleBinNotes();
 
 	public void hardDeleteNotes(Integer id) throws Exception;
 
-	public void emptyRecycleBin(Integer userId);
-	
+	public void emptyRecycleBin();
+
 	public void favouriteNotes(Integer noteId) throws Exception;
-	
+
 	public void unFavoriteNotes(Integer favouriteNotes) throws Exception;
-	
+
 	public List<FavouriteNoteDto> getUserFavouriteNotes() throws Exception;
 
 	public Boolean copyNotes(Integer noteId) throws Exception;
-	
+
 }

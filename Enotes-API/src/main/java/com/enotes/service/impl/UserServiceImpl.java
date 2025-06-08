@@ -1,121 +1,128 @@
 package com.enotes.service.impl;
 
-import java.io.UnsupportedEncodingException;
-import java.util.List;
 import java.util.UUID;
 
-import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+import org.springframework.util.StringUtils;
 
-import com.enotes.config.security.CustomUserDetails;
 import com.enotes.dto.EmailRequest;
-import com.enotes.dto.LoginRequest;
-import com.enotes.dto.LoginResponse;
-import com.enotes.dto.UserDto;
-import com.enotes.entity.AccountStatus;
-import com.enotes.entity.Role;
+import com.enotes.dto.PasswordChngeRequest;
+import com.enotes.dto.PswdResetRequest;
 import com.enotes.entity.User;
-import com.enotes.repository.RoleRepository;
+import com.enotes.exception.ResourceNotFoundException;
 import com.enotes.repository.UserRepository;
 import com.enotes.service.EmailService;
-import com.enotes.service.JwtService;
 import com.enotes.service.UserService;
-import com.enotes.util.Validation;
+import com.enotes.util.CommonUtils;
 
-import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 
 @Service
 public class UserServiceImpl implements UserService {
 
 	@Autowired
+	private PasswordEncoder passwordEncoder;
+
+	@Autowired
 	private UserRepository userRepository;
-
-	@Autowired
-	private RoleRepository roleRepository;
-
-	@Autowired
-	private ModelMapper modelMapper;
-
-	@Autowired
-	private Validation validation;
 
 	@Autowired
 	private EmailService emailService;
 
-	@Autowired
-	private AuthenticationManager authenticationManager;
-
-	@Autowired
-	private PasswordEncoder passwordEncoder;
-
-	@Autowired
-	private JwtService jwtService;
-
 	@Override
-	public Boolean register(UserDto userDto, String url) throws UnsupportedEncodingException, MessagingException {
-		validation.userValidation(userDto);
-		User user = modelMapper.map(userDto, User.class);
-		setRole(userDto, user);
+	public void changePassword(PasswordChngeRequest passwordChngeRequest) {
+		User loggedInUser = CommonUtils.getLoggedInUser();
 
-		AccountStatus accountStatus = new AccountStatus();
-		accountStatus.setIsActive(false);
-		accountStatus.setVerificationCode(UUID.randomUUID().toString());
-
-		user.setStatus(accountStatus);
-		user.setPassword(passwordEncoder.encode(user.getPassword()));
-		User saveduser = userRepository.save(user);
-
-		if (!ObjectUtils.isEmpty(saveduser)) {
-			emailSend(saveduser, url);
-			return true;
+		if (!passwordEncoder.matches(passwordChngeRequest.getOldPassword(), loggedInUser.getPassword())) {
+			throw new IllegalArgumentException("Old Password is incorrect !!");
 		}
-		return false;
+		String encodePassword = passwordEncoder.encode(passwordChngeRequest.getNewPassword());
+		loggedInUser.setPassword(encodePassword);
+		userRepository.save(loggedInUser);
 	}
 
 	@Override
-	public LoginResponse login(LoginRequest loginRequest) {
-		Authentication authenticate = authenticationManager.authenticate(
-				new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+	public void sendEmailPasswordReset(String email, HttpServletRequest request) throws Exception {
 
-		if (authenticate.isAuthenticated()) {
+		User user = userRepository.findByEmail(email);
 
-			CustomUserDetails customUserDetails = (CustomUserDetails) authenticate.getPrincipal();
-			String token = jwtService.generateToken(customUserDetails.getUser());
-			LoginResponse loginResponse = new LoginResponse();
-			loginResponse.setToken(token);
-			loginResponse.setUser(modelMapper.map(customUserDetails.getUser(), UserDto.class));
-			return loginResponse;
+		if (ObjectUtils.isEmpty(user)) {
+			throw new ResourceNotFoundException("Invalid email");
 		}
-		return null;
+
+		// Generate unique password reset token
+		String passwordResetToken = UUID.randomUUID().toString();
+		user.getStatus().setPasswordResetToken(passwordResetToken);
+		User updateUser = userRepository.save(user);
+
+		String url = CommonUtils.getUrl(request);
+		sendEmailRequest(updateUser, url);
 	}
 
-	private void emailSend(User saveduser, String url) throws UnsupportedEncodingException, MessagingException {
-		String message = "Hi <b>[[username]]</b> " + "<br><p>Your account register successfully.</p>"
-				+ "<p>Click the link below to verify and active your password</p>"
-				+ "<a href='[[url]]' > Click Here </a><br/>" + "Thanks,<br>Enotes.com";
+	private void sendEmailRequest(User user, String url) throws Exception {
 
-		message = message.replace("[[username]]", saveduser.getFirstName());
-		message = message.replace("[[url]]", url + "/api/v1/home/verify?uid=" + saveduser.getId() + "&&code="
-				+ saveduser.getStatus().getVerificationCode());
+		String message = "Hi <b>[[username]]</b> " + "<br><p>You have requested to reset your password.</p>"
+				+ "<p>Click the link below to change your password:</p>"
+				+ "<p><a href=[[url]]>Change my password</a></p>"
+				+ "<p>Ignore this email if you do remember your password, "
+				+ "or you have not made the request.</p><br>" + "Thanks,<br>Enotes.com";
 
-		EmailRequest emailRequest = new EmailRequest();
-		emailRequest.setTo(saveduser.getEmail());
-		emailRequest.setTitle("Account Created Successfully");
-		emailRequest.setSubject("Account Create");
-		emailRequest.setMessage(message);
-		emailService.send(emailRequest);
+		message = message.replace("[[username]]", user.getFirstName());
+		message = message.replace("[[url]]", url + "/api/v1/home/verify-pswd-link?uid=" + user.getId() + "&&code="
+				+ user.getStatus().getPasswordResetToken());
+
+		// EmailRequest emailRequest =
+		// EmailRequest.builder().to(user.getEmail()).title("Password Reset")
+		// .subject("Password Reset link").message(message).build();
+		//
+		EmailRequest er = new EmailRequest();
+		er.setMessage(message);
+		er.setTo(user.getEmail());
+		er.setTitle("password reset");
+		er.setSubject("password reset link");
+
+		// send password reset email to user
+		emailService.send(er);
 	}
 
-	private void setRole(UserDto userDto, User user) {
-		List<Integer> reqRoleId = userDto.getRoles().stream().map(r -> r.getId()).toList();
-		List<Role> roles = roleRepository.findAllById(reqRoleId);
-		user.setRoles(roles);
+	@Override
+	public void verifyPasswordResetLink(Integer uid, String code) throws Exception {
+		User user = userRepository.findById(uid).orElseThrow(() -> new ResourceNotFoundException("invalid user"));
+		verifyPasswordResetCode(user.getStatus().getPasswordResetToken(), code);
+	}
+
+	@Override
+	public void resetPassword(PswdResetRequest pswdResetRequest) throws Exception {
+		User user = userRepository.findById(pswdResetRequest.getUid())
+				.orElseThrow(() -> new ResourceNotFoundException("invalid user"));
+
+		String encodePassword = passwordEncoder.encode(pswdResetRequest.getNewPassword());
+		user.setPassword(encodePassword);
+		user.getStatus().setPasswordResetToken(null);
+		userRepository.save(user);
+
+	}
+
+	private void verifyPasswordResetCode(String existToken, String reqToken) {
+
+		// request token not null
+		if (StringUtils.hasText(reqToken)) {
+
+			// password already reset
+			if (StringUtils.hasText(existToken)) {
+				throw new IllegalArgumentException("Already password reset");
+			}
+
+			// user request token changes means token missmatch
+			if (!existToken.equals(reqToken)) {
+				throw new IllegalArgumentException("Invalid url");
+			}
+		} else {
+			throw new IllegalArgumentException("Invalid token or code");
+		}
 	}
 
 }

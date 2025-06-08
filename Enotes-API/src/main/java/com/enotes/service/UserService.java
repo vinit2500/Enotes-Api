@@ -1,16 +1,17 @@
 package com.enotes.service;
 
-import java.io.UnsupportedEncodingException;
+import com.enotes.dto.PasswordChngeRequest;
+import com.enotes.dto.PswdResetRequest;
 
-import com.enotes.dto.LoginRequest;
-import com.enotes.dto.LoginResponse;
-import com.enotes.dto.UserDto;
-
-import jakarta.mail.MessagingException;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface UserService {
 
-	public Boolean register(UserDto userDto, String url) throws UnsupportedEncodingException, MessagingException;
+	public void changePassword(PasswordChngeRequest passwordChngeRequest);
 
-	public LoginResponse login(LoginRequest loginRequest);
+	public void sendEmailPasswordReset(String email,HttpServletRequest request) throws Exception;
+
+	public void verifyPasswordResetLink(Integer uid, String code) throws Exception;
+
+	public void resetPassword(PswdResetRequest pswdResetRequest) throws Exception;
 }

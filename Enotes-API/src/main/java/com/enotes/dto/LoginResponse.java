@@ -3,7 +3,7 @@ package com.enotes.dto;
 public class LoginResponse {
 
 	private String token;
-	private UserDto user;
+	private UserResponse userResponse;
 
 	public String getToken() {
 		return token;
@@ -13,11 +13,11 @@ public class LoginResponse {
 		this.token = token;
 	}
 
-	public UserDto getUser() {
-		return user;
+	public UserResponse getUserResponse() {
+		return userResponse;
 	}
 
-	public void setUser(UserDto user) {
-		this.user = user;
+	public void setUserResponse(UserResponse userResponse) {
+		this.userResponse = userResponse;
 	}
 }

@@ -13,9 +13,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import com.enotes.entity.User;
+import com.enotes.exception.JwtTokenExpiredException;
 import com.enotes.service.JwtService;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -46,7 +49,8 @@ public class JwtServiceImpl implements JwtService {
 		claims.put("status", user.getStatus().getIsActive());
 		String token = Jwts.builder().claims().add(claims).subject(user.getEmail())
 				.issuedAt(new Date(System.currentTimeMillis()))
-				.expiration(new Date(System.currentTimeMillis() + 60 * 60 * 60 * 10)).and().signWith(getKey()).compact();
+				.expiration(new Date(System.currentTimeMillis() + 60 * 60 * 60 * 10)).and().signWith(getKey())
+				.compact();
 		return token;
 	}
 
@@ -56,7 +60,7 @@ public class JwtServiceImpl implements JwtService {
 		String email = claims.getSubject();
 		return email;
 	}
-	
+
 	public String getRoleFromToken(String token) {
 		Claims claims = extractAllClaims(token);
 		String role = (String) claims.get("role");
@@ -65,11 +69,11 @@ public class JwtServiceImpl implements JwtService {
 
 	@Override
 	public Boolean validateToken(String token, UserDetails userDetails) {
-		
+
 		String username = extractUsername(token);
 		Boolean isExpired = isTokenExpired(token);
-		
-		if(username.equalsIgnoreCase(userDetails.getUsername()) && !isExpired) {
+
+		if (username.equalsIgnoreCase(userDetails.getUsername()) && !isExpired) {
 			return true;
 		}
 		return false;
@@ -82,11 +86,17 @@ public class JwtServiceImpl implements JwtService {
 	}
 
 	private Claims extractAllClaims(String token) {
-		Claims claims = Jwts.parser().verifyWith(decryptKey(secretKey))
-				.build()
-				.parseSignedClaims(token)
-				.getPayload();
-		return claims;
+		try {
+			Claims claims = Jwts.parser().verifyWith(decryptKey(secretKey)).build().parseSignedClaims(token)
+					.getPayload();
+			return claims;
+		} catch (ExpiredJwtException e) {
+			throw new JwtTokenExpiredException("Token is expired");
+		} catch (JwtException e) {
+			throw new JwtTokenExpiredException("Invalid jwt token");
+		} catch (Exception e) {
+			throw e;
+		}
 	}
 
 	private SecretKey decryptKey(String secretKey) {

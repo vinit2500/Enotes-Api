@@ -38,6 +38,7 @@ import com.enotes.repository.FavouriteNoteRepository;
 import com.enotes.repository.FileRepository;
 import com.enotes.repository.NotesRepository;
 import com.enotes.service.NotesService;
+import com.enotes.util.CommonUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
@@ -120,7 +121,7 @@ public class NotesServiceImpl implements NotesService {
 	private void checkCategoryExist(CategoryDto category) throws ResourceNotFoundException {
 
 		categoryRepository.findById(category.getId())
-				.orElseThrow(() -> new ResourceNotFoundException("Category not found with given id"));
+		.orElseThrow(() -> new ResourceNotFoundException("Category not found with given id"));
 
 	}
 
@@ -197,8 +198,8 @@ public class NotesServiceImpl implements NotesService {
 	}
 
 	@Override
-	public NotesResponse getAllNotesByUser(Integer userId, Integer pageNo, Integer pageSize) {
-
+	public NotesResponse getAllNotesByUser(Integer pageNo, Integer pageSize) {
+		Integer userId = CommonUtils.getLoggedInUser().getId();
 		Pageable pageable = PageRequest.of(pageNo, pageSize); // 0 means first page
 		Page<Notes> pageNotes = notesRepository.findByCreatedByAndIsDeletedFalse(userId, pageable);
 
@@ -236,7 +237,8 @@ public class NotesServiceImpl implements NotesService {
 	}
 
 	@Override
-	public List<NotesDto> getUserRecycleBinNotes(Integer userId) {
+	public List<NotesDto> getUserRecycleBinNotes() {
+		Integer userId = CommonUtils.getLoggedInUser().getId();
 		List<Notes> recycleNotes = notesRepository.findByCreatedByAndIsDeletedTrue(userId);
 		List<NotesDto> notesDtoList = recycleNotes.stream().map(note -> modelMapper.map(note, NotesDto.class)).toList();
 		return notesDtoList;
@@ -255,8 +257,8 @@ public class NotesServiceImpl implements NotesService {
 	}
 
 	@Override
-	public void emptyRecycleBin(Integer userId) {
-
+	public void emptyRecycleBin() {
+		Integer userId = CommonUtils.getLoggedInUser().getId();
 		List<Notes> recycleNotes = notesRepository.findByCreatedByAndIsDeletedTrue(userId);
 
 		if (!CollectionUtils.isEmpty(recycleNotes)) {
@@ -286,7 +288,7 @@ public class NotesServiceImpl implements NotesService {
 
 	@Override
 	public List<FavouriteNoteDto> getUserFavouriteNotes() {
-		Integer userId = 1;
+		Integer userId = CommonUtils.getLoggedInUser().getId();
 		List<FavouriteNote> favouriteNotes = favouriteNoteRepository.findByUserId(userId);
 
 		List<FavouriteNoteDto> listOfFavNotes = favouriteNotes.stream()
@@ -298,7 +300,7 @@ public class NotesServiceImpl implements NotesService {
 	public Boolean copyNotes(Integer noteId) throws Exception {
 		Notes notes = notesRepository.findById(noteId)
 				.orElseThrow(() -> new ResourceNotFoundException("Notes not found withh given id"));
-		
+
 		Notes copyNote = new Notes();
 		copyNote.setTitle(notes.getTitle());
 		copyNote.setDescription(notes.getDescription());
@@ -306,11 +308,37 @@ public class NotesServiceImpl implements NotesService {
 		copyNote.setIsDeleted(false);
 		copyNote.setFileDetails(null);
 		Notes savedCopyNotes = notesRepository.save(copyNote);
-		
-		if(!ObjectUtils.isEmpty(savedCopyNotes)) {
+
+		if (!ObjectUtils.isEmpty(savedCopyNotes)) {
 			return true;
 		}
 		return false;
+	}
+
+	@Override
+	public NotesResponse getNotesByUserSearch(Integer pageNo, Integer pageSize, String keyword) {
+		Integer userId = CommonUtils.getLoggedInUser().getId();
+		Pageable pageable = PageRequest.of(pageNo, pageSize);
+		Page<Notes> pageNotes = notesRepository.searchNotes(keyword, userId, pageable);
+
+		List<NotesDto> notesDto = pageNotes.get().map(n -> modelMapper.map(n, NotesDto.class)).toList();
+
+		// NotesResponse notes =
+		// NotesResponse.builder().notes(notesDto).pageNo(pageNotes.getNumber())
+		// .pageSize(pageNotes.getSize()).totalElements(pageNotes.getTotalElements())
+		// .totalPages(pageNotes.getTotalPages()).isFirst(pageNotes.isFirst()).isLast(pageNotes.isLast()).build();
+		//
+
+		NotesResponse notes = new NotesResponse();
+		notes.setNotes(notesDto);
+		notes.setPageNo(pageNotes.getNumber());
+		notes.setPageSize(pageNotes.getSize());
+		notes.setTotalElements(pageNotes.getTotalElements());
+		notes.setTotalPages(pageNotes.getTotalPages());
+		notes.setIsFirst(pageNotes.isFirst());
+		notes.setIsLast(pageNotes.isLast());
+
+		return notes;
 	}
 
 }

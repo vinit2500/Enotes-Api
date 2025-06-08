@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.enotes.dto.LoginRequest;
 import com.enotes.dto.LoginResponse;
 import com.enotes.dto.UserDto;
-import com.enotes.service.UserService;
+import com.enotes.service.AuthService;
 import com.enotes.util.CommonUtils;
 
 import jakarta.mail.MessagingException;
@@ -25,7 +25,7 @@ import jakarta.servlet.http.HttpServletRequest;
 public class AuthController {
 
 	@Autowired
-	private UserService userService;
+	private AuthService userService;
 	
 	@PostMapping("/")
 	public ResponseEntity<?> registerUser(@RequestBody UserDto userDto, HttpServletRequest request)

@@ -15,6 +15,17 @@ public class AccountStatus {
 
 	private String verificationCode;
 
+	//first time null hi store hoga
+	private String passwordResetToken;
+	
+	public String getPasswordResetToken() {
+		return passwordResetToken;
+	}
+
+	public void setPasswordResetToken(String passwordResetToken) {
+		this.passwordResetToken = passwordResetToken;
+	}
+
 	public Integer getId() {
 		return id;
 	}
